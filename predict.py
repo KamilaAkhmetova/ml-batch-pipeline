@@ -1,7 +1,10 @@
 import psycopg2
 import joblib  
 import os
+import warnings
 from dotenv import load_dotenv
+
+warnings.filterwarnings("ignore")
 
 load_dotenv()
 
@@ -25,9 +28,13 @@ for row in rows:
     cursor.execute("""
         INSERT INTO predictions (id, prediction, prediction_timestamp)
         VALUES (%s, %s, NOW())
+        ON CONFLICT (id) 
+        DO UPDATE SET 
+            prediction = EXCLUDED.prediction,
+            prediction_timestamp = EXCLUDED.prediction_timestamp
     """, (row[0], float(prediction)))
 
 conn.commit()
 cursor.close()
 conn.close()
-print("✅ Предсказания сохранены!")
+print(f">>> Predictions saved/updated for {len(rows)} records!")
